@@ -37,54 +37,55 @@ $$
 
 **Operator Splitting:**
 
->利用 Strang Splitting 或一階 Lie-Trotter 分裂，將原方程解耦為非線性Reaction Sub-step與線性 Diffusion Sub-step：
->
->1.  Reaction Sub-step：
->
->    求解常微分方程 (ODE)：
->
->    $$
->    \frac{d u^*}{d t} = \rho u^* (1 - u^*/K)
->    $$
->
->    此步可在時域內通過解析解或高階 Runge-Kutta 方法精確求解。
->
->2.  Diffusion Sub-step：
->
->   求解熱傳導方程：
->
->    $$
->    \frac{\partial u^{**}}{\partial t} = D \nabla^2 u^{**}
->    $$
->
->    這步驟是困難點，於是這邊利用 Frequency Domain Method(利用 Sine Transform 將癌細胞分佈轉換為頻譜 ($$\hat{u}[k]$$)，利用頻域中「微分等於乘法」的特性來快速求解擴散項，最後再轉換回空間分佈的一整套數值方法。) 求解。
+利用 Strang Splitting 或一階 Lie-Trotter 分裂，將原方程解耦為非線性 Reaction Sub-step 與線性 Diffusion Sub-step：
 
-**Fourier Sine Transform(FST)**
+**Reaction Sub-step：**
 
->針對 $$\partial \Omega$$ 處 $$u=0$$ 的約束，標準傅立葉轉換 (FFT) 隱含的週期性邊界並不適用，且會導致Gibbs Phenomenon。因此，我們採用Sine Transform*，其數學基礎為將函數進行Odd Extension。
->
->
->正弦轉換定義：
->
->$$
->\hat{u}_k = \int_0^L u(x) \sin\left(\frac{k \pi x}{L}\right) dx
->$$
->
->頻域二階微分特性：
->
->在正弦譜空間中，拉普拉斯算子對應於波數平方的乘積，將微分運算轉化為代數運算：
->
->$$
->\mathcal{F}_s [\nabla^2 u] = - |\mathbf{k}|^2 \hat{u}_\mathbf{k}
->$$
->
->其中波數向量 $$\mathbf{k} = (k_x, k_y)$$，且 $$|\mathbf{k}|^2 = k_x^2 + k_y^2$$。
->
->因此，擴散子步的解析解可表示為：
->
->$$
->\hat{u}^{**}(t+\Delta t) = e^{-D |\mathbf{k}|^2 \Delta t} \cdot \hat{u}^*(t)
->$$
+求解常微分方程 (ODE)，計算中間狀態 $$u^*$$：
+
+$$
+\frac{d u^* }{d t} = \rho {u}^* \left(1 - \frac{u^* }{K}\right)
+$$
+
+
+此步可在時域內通過解析解或高階 Runge-Kutta 方法精確求解。
+
+**Diffusion Sub-step：**
+
+求解熱傳導方程，從 $$u^*$$ 更新至 $$u^{**}$$：
+
+$$
+\frac{\partial u^{**}}{\partial t} = D \nabla^2 u^{**}
+$$
+
+這步驟是困難點，於是這邊利用 Frequency Domain Method (利用 Sine Transform 將癌細胞分佈轉換為頻譜 $$\hat{u}[k]$$，利用頻域中「微分等於乘法」的特性來快速求解擴散項，最後再轉換回空間分佈的一整套數值方法。) 求解。
+
+<br></br>
+**Fourier Sine Transform (FST)**
+
+針對 $$\partial \Omega$$ 處 $$u=0$$ 的約束，標準傅立葉轉換 (FFT) 隱含的週期性邊界並不適用，且會導致 Gibbs Phenomenon。因此，我們採用 Sine Transform，其數學基礎為將函數進行 Odd Extension。
+
+正弦轉換定義 (Forward Transform)：
+
+$$
+\hat{u}_k = \int_0^L u(x) \sin\left(\frac{k \pi x}{L}\right) dx
+$$
+
+頻域二階微分特性 (Laplacian Property)：
+
+在正弦譜空間中，拉普拉斯算子對應於波數平方的乘積，將微分運算轉化為代數運算：
+
+$$
+\mathcal{F}_s [\nabla^2 u] = - |\mathbf{k}|^2 \hat{u}_\mathbf{k}
+$$
+
+其中波數向量 $$\mathbf{k} = (k_x, k_y)$$，且 $$|\mathbf{k}|^2 = k_x^2 + k_y^2$$。
+
+因此，擴散子步的解析解可表示為 (Exact Integration)：
+
+$$
+\hat{u}^{**}(t+\Delta t) = e^{-D |\mathbf{k}|^2 \Delta t} \cdot \hat{u}^*(t)
+$$
 
 <br></br>
 
@@ -101,7 +102,7 @@ $$
 
 <br></br>
 
-**演算法實作與基準測試**
+**演算法**
 
 以下演算法實作了 Fisher-KPP 模型的求解，並包含與 FDM 的對比。
 
@@ -261,3 +262,252 @@ if __name__ == "__main__":
 >[6] J. P. Boyd, *Chebyshev and Fourier Spectral Methods*, 2nd ed. Mineola, NY: Dover Publications, 2001.
 >
 >[7] G. Strang, "On the construction and comparison of difference schemes," *SIAM Journal on Numerical Analysis*, vol. 5, no. 3, pp. 506-517, 1968.
+
+
+<br></br>
+
+**附錄：證明**
+
+>**Reaction Sub-step 解析解證明**
+>
+>
+>推導 Fisher-KPP 方程中反應項 (Logistic Growth) 的解析解。此推導證明了在數值模擬的Reaction Sub-step 中，我們無需使用有限差分或 Runge-Kutta 等近似方法，而是可以直接使用精確公式更新數值，從而消除此步驟的截斷誤差。
+>
+>
+>在 Operator Splitting 的 Reaction Sub-step 中，解下面 ODE:
+>
+>$$
+>\frac{d u^* }{d t} = \rho u^* \left(1 - \frac{u^* }{K}\right)
+>$$
+>
+>其中：
+>* $$u^*(t)$$：細胞密度。
+>* $$\rho$$：生長速率。
+>* $$K$$：環境承載力。
+>* 初始條件：設 $$t=0$$ (或當前時間步) 時的數值為 $$u_0$$ 。
+>
+>
+>$$
+>\frac{1}{u^* (1 - u^* /K)} \ d u^* = \rho \ d t
+>$$
+>
+>
+>$$
+>\frac{K}{u^* (K - u^* )} \ d u^* = \rho \ d t
+>$$
+>
+>
+>希望將左邊的複雜分式拆解為兩個簡單分式的和。假設存在常數 $$A$$ 與 $$B$$ 使得：
+>
+>$$
+>\frac{K}{u^* (K - u^* )} = \frac{A}{u^* } + \frac{B}{K - u^* }
+>$$
+>
+>
+>$$
+>\frac{A(K - u^* ) + B u^* }{u^* (K - u^* )} = \frac{AK + (B - A)u^* }{u^* (K - u^* )}
+>$$
+>
+>對比分子係數：
+> 常數項： $$AK = K \implies A = 1$$
+> 一次項： $$(B - A)u^* = 0 \implies B = A = 1$$
+>
+>因此，原式可拆解為：
+>
+>$$
+>\left( \frac{1}{u^* } + \frac{1}{K - u^* } \right) d u^* = \rho \ d t
+>$$
+>
+>
+>$$
+>\int \left( \frac{1}{u^* } + \frac{1}{K - u^* } \right) d u^* = \int \rho \ d t
+>$$
+>
+>
+>$$
+>\ln|u^* | - \ln|K - u^* | = \rho t + C
+>$$
+>
+>
+>$$
+>\ln \left| \frac{u^* }{K - u^* } \right| = \rho t + C
+>$$
+>
+>
+>對兩邊取 $$e^x$$：
+>
+>$$
+>\frac{u^* }{K - u^* } = e^{\rho t + C} = e^C \cdot e^{\rho t}
+>$$
+>
+>令常數 $$A = e^C$$，且考慮生物意義下 $$0 < u^* < K$$ ，可去掉絕對值：
+>
+>$$
+>\frac{u^* }{K - u^* } = A e^{\rho t} \quad \cdots \cdots \text{(式 1)}
+>$$
+>
+>
+>假設在當前時間步 $$t=0$$ 時，細胞密度為 $$u_0$$ 。代入 (式 1)：
+>
+>$$
+>\frac{u_0}{K - u_0} = A e^0 \implies A = \frac{u_0}{K - u_0}
+>$$
+>
+>將 $$A$$ 代回 (式 1)：
+>
+>$$
+>\frac{u^* }{K - u^* } = \frac{u_0}{K - u_0} e^{\rho t}
+>$$
+>
+>
+>目標是解出 $$u^*$$ 。將右邊設為 $$E = \frac{u_0}{K - u_0} e^{\rho t}$$ ，則：
+>
+>$$
+>\begin{aligned}
+>\frac{u^* }{K - u^* } &= E \\
+>u^* &= E(K - u^* ) \\
+>u^* &= EK - E u^* \\
+>u^* + E u^* &= EK \\
+>u^* 1 + E) &= EK \\
+>u^* &= \frac{EK}{1 + E}
+>\end{aligned}
+>$$
+>
+>將 $$E = \frac{u_0 e^{\rho t}}{K - u_0}$$ 代回：
+>
+>$$
+>u^*(t) = \frac{K \cdot \frac{u_0 e^{\rho t}}{K - u_0}}{1 + \frac{u_0 e^{\rho t}}{K - u_0}}
+>$$
+>
+>分子分母同乘 $$(K - u_0)$$ 以化簡繁分式：
+>
+>$$
+>u^*(t) = \frac{K u_0 e^{\rho t}}{(K - u_0) + u_0 e^{\rho t}}
+>$$
+>
+>重新排列分母：
+>
+>$$
+>u^*(t) = \frac{K u_0 e^{\rho t}}{K + u_0 e^{\rho t} - u_0} = \frac{K u_0 e^{\rho t}}{K + u_0 (e^{\rho t} - 1)}
+>$$
+>
+>
+><br></br>
+>
+>**證明為何 Finite Fourier Sine Transform, (DST) 能將空間域的拉普拉斯算子 ($$\nabla^2$$) 對應至頻域的代數乘法 ($$-k^2$$)，並論證其與 Dirichlet 邊界條件的相容性。**
+>
+>設 $u(x)$ 定義於區間 $[0, L]$，且滿足 Dirichlet 邊界條件：
+>
+>$$
+>u(0) = 0, \quad u(L) = 0
+>$$
+>
+>定義 $u(x)$ 的有限正弦轉換係數 $\hat{u}_k$ 為：
+>
+>$$
+>\hat{u}_k = \int_0^L u(x) \sin(\lambda_k x) \, dx
+>$$
+>
+>其中特徵值 (eigenvalue) $\lambda_k$ 定義為：
+>
+>$$
+>\lambda_k = \frac{k \pi}{L}, \quad k = 1, 2, 3, \dots
+>$$
+>
+>
+>
+>目標是求解二階導數 $u''(x) = \frac{d^2 u}{d x^2}$ 的正弦轉換：
+>
+>$$
+>\mathcal{F}_s[u''(x)] = \int_0^L u''(x) \sin(\lambda_k x) \, dx
+>$$
+>
+>利用 Integration by Parts :
+>
+>
+>
+>Let
+>
+>$$
+>\begin{aligned}
+>U &= \sin(\lambda_k x) & \implies dU &= \lambda_k \cos(\lambda_k x) \, dx \\
+>dV &= u''(x) \, dx & \implies V &= u'(x)
+>\end{aligned}
+>$$
+>
+>代入積分公式：
+>
+>$$
+>\int_0^L u''(x) \sin(\lambda_k x) \, dx = \underbrace{\left[ u'(x) \sin(\lambda_k x) \right]_0^L}_{\text{邊界項 I}} - \int_0^L u'(x) \lambda_k \cos(\lambda_k x) \, dx
+>$$
+>
+>
+>由於 $\sin(\lambda_k L) = \sin(k\pi) = 0$ 且 $\sin(0) = 0$，故此項自然消失：
+>
+>$$
+>\left[ u'(L)\sin(k\pi) - u'(0)\sin(0) \right] = 0
+>$$
+>
+>積分式簡化為：
+>
+>$$
+>\mathcal{F}_s[u''(x)] = - \lambda_k \int_0^L u'(x) \cos(\lambda_k x) \, dx
+>$$
+>
+>Then
+>
+>$$
+>\begin{aligned}
+>U &= \cos(\lambda_k x) & \implies dU &= -\lambda_k \sin(\lambda_k x) \, dx \\
+>dV &= u'(x) \, dx & \implies V &= u(x)
+>\end{aligned}
+>$$
+>
+>代入積分公式：
+>
+>$$
+>\begin{aligned}-\lambda_k \int_0^L u'(x) \cos(\lambda_k x) \, dx &= - \lambda_k \left( \underbrace{\left[ u(x) \cos(\lambda_k x) \right]_0^L}_{\text{邊界項 II}} - \int_0^L u(x) (-\lambda_k \sin(\lambda_k x)) \, >dx \right)
+>\end{aligned}
+>$$
+>
+>
+>此處引入物理模型的 $$u(0)=u(L)=0$$ 。
+>
+>$$
+>\left[ u(L)\cos(k\pi) - u(0)\cos(0) \right] = 0 \cdot (-1)^k - 0 \cdot 1 = 0
+>$$
+>
+>Therfore
+>
+>$$
+>\begin{aligned}
+>\mathcal{F}_s[u''(x)] &= - \lambda_k \left( 0 + \lambda_k \int_0^L u(x) \sin(\lambda_k x) \, dx \right) \\
+>&= - \lambda_k^2 \int_0^L u(x) \sin(\lambda_k x) \, dx \\
+>&= - \lambda_k^2 \hat{u}_k
+>\end{aligned}
+>$$
+>
+>**得證：**
+>
+>$$
+>\mathcal{F}_s \left[ \frac{d^2 u}{d x^2} \right] = - \left( \frac{k \pi}{L} \right)^2 \hat{u}_k
+>$$
+>
+><br></br>
+>
+>**推廣至二維 Laplacian**
+>
+>對於二維函數 $u(x, y)$，定義二維正弦轉換為連續兩次的一維轉換。基於線性疊加原理，拉普拉斯算子 $$\nabla^2 = \partial_x^2 + \partial_y^2$$ 在頻域中可表示為：
+>
+>$$
+>\begin{aligned}
+>\mathcal{F}_s [\nabla^2 u] &= \mathcal{F}_s [u_{xx} + u_{yy}] \\
+>&= \mathcal{F}_s [u_{xx}] + \mathcal{F}_s [u_{yy}] \\
+>&= -\left(\frac{k_x \pi}{L}\right)^2 \hat{u}_{\mathbf{k}} - \left(\frac{k_y \pi}{L}\right)^2 \hat{u}_{\mathbf{k}} \\
+>&= - |\mathbf{k}|^2 \hat{u}_{\mathbf{k}}
+>\end{aligned}
+>$$
+>
+>其中 $$|\mathbf{k}|^2 = k_x^2 + k_y^2$$ (若已歸一化長度 $L=\pi$，則簡化為 $$-(k_x^2 + k_y^2)$$)。
+>
+>此性質確保了在擴散子步 (Diffusion Sub-step) 中，偏微分方程可轉化為常微分方程求解，並保證數值解的無條件穩定性。
