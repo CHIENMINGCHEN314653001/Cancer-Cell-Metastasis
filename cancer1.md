@@ -96,7 +96,7 @@ $$
 | 評估指標 | 有限差分法 (FDM) | 正弦譜方法 (Proposed Spectral Method) |
 | :---: | :---: |:---: |
 | 空間精度 | 代數收斂 $$O(\Delta x^2)$$ | Spectral Convergence $$O(e^{-N})$$ |
-| 時間穩定性 | 受 CFL 條件限制 ($$\Delta t \propto \Delta x^2$$) | Unconditionally Stable |
+| 時間穩定性 | 受 CFL(Courant-Friedrichs-Lewy condition) 條件限制 ($$\Delta t \propto \Delta x^2$$) | Unconditionally Stable |
 | 邊界處理 | 需處理邊界節點差分 | 自動滿足 $$u_{\partial \Omega}=0$$ |
 | 各向同性 | 網格易導致各向異性誤差 | 完美保持圓對稱擴散 |
 
