@@ -44,7 +44,7 @@ $$
 >    求解常微分方程 (ODE)：
 >
 >    $$
->    \frac{d u^{**}{\d t  = \rho u^* (1 - u^{*}/K)
+>    \frac{d u^*}{d t} = \rho u^* (1 - u^*/K)
 >    $$
 >
 >    此步可在時域內通過解析解或高階 Runge-Kutta 方法精確求解。
@@ -236,6 +236,7 @@ if __name__ == "__main__":
     plt.suptitle(f"Benchmark: Spectral vs FDM at t={T_end} (Grid: 128x128)", fontsize=14)
     plt.show()
 ```
+![figure](1.jpg)
 
 <br></br>
 
