@@ -638,7 +638,6 @@ if __name__ == "__main__":
 >\frac{d \hat{u}_{\mathbf{k}}}{dt} + \lambda_k \hat{u}_{\mathbf{k}} = \hat{S}_{\mathbf{k}}
 >$$
 >
->Integrating Factor
 >
 >同乘積分因子 $$e^{\lambda_k t}$$：
 >
