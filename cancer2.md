@@ -9,7 +9,7 @@ Fisher-KPP 方程與正弦轉換譜方法之癌細胞擴散高數值模擬(Toy m
 
 **數學模型**
 
-癌細胞在生物組織內的時空演化過程可由反應擴散方程描述。這邊採用經典的 Fisher-KPP 方程，考量細胞的 Random Walk 與 Logistic Growth 。
+癌細胞在生物組織內的時空演化過程可由反應擴散方程描述。這邊採用 Fisher-KPP 方程，考量細胞的 Random Walk 與 Logistic Growth 。
 
 二維含原項的 Fisher-KPP 反應擴散方程，定義域為 $$\Omega = [0, L] \times [0, L]$$（這邊令 $$L=50$$）。
 
@@ -156,7 +156,7 @@ class FisherKPPSolver:
         self.D = D
         self.rho = rho
         self.K = K
-        self.dx = L / (N + 1) # DST Type-1 對應內部節點 (N interior points)
+        self.dx = L / (N + 1) # DST Type-1 對應內部節點
         
         # 建立網格 (只包含內部點，不含邊界 0)
         x = np.linspace(self.dx, L - self.dx, N)
@@ -165,7 +165,7 @@ class FisherKPPSolver:
         
         # 源項 S(x,y)
         self.S = self.X * (self.L - self.X) * self.Y * (self.L - self.Y)
-        # 縮放源項以免數值瞬間爆炸 (Toy Model 調整)
+        # 縮放源項以免數值瞬間爆炸
         self.S *= 1e-4 
 
         # --- Spectral 預計算 ---
@@ -175,7 +175,7 @@ class FisherKPPSolver:
         # 特徵值 lambda = (k*pi/L)^2
         self.lambda_k = (kx * np.pi / L)**2 + (ky * np.pi / L)**2
         
-        # 源項的 DST 頻譜 (因為 S 不隨時間變，先算好)
+        # 源項的 DST 頻譜
         self.S_hat = dst(dst(self.S, type=1, axis=0), type=1, axis=1)
 
     def get_initial_condition(self):
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     print(f"Spectral Error (Max): {np.max(err_spec):.2e}, Time: {t_spec:.4f}s")
     print(f"FDM Error (Max):      {np.max(err_fdm):.2e}, Time: {t_fdm:.4f}s")
     
-    # === 繪圖 ===
+
     fig, ax = plt.subplots(1, 3, figsize=(18, 5))
     
     im0 = ax[0].imshow(u_true, extent=[0, L, 0, L], origin='lower', cmap='inferno')
@@ -606,7 +606,7 @@ if __name__ == "__main__":
 >\hat{u}^{**}_{\mathbf{k}} = \hat{u}^*_{\mathbf{k}} e^{-\lambda_k \Delta t} + \frac{\hat{S}_{\mathbf{k}}}{\lambda_k} (1 - e^{-\lambda_k \Delta t})
 >$$
 >
->其中 $$\lambda_k = D |\mathbf{k}|^2$$ 。
+>這邊令 $$\lambda_k = D |\mathbf{k}|^2$$ 。
 >
 >
 >Sine Transform
