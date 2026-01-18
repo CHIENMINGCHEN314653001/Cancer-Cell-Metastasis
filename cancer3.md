@@ -222,3 +222,209 @@ f(x,y,t) &= -3 \Phi \cos(\theta) \\
 $$
 
 其中 $$\theta = \frac{4\pi x}{L} - 3t$$
+
+<br></br>
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import dst, idst
+import time
+
+class FisherKPPMMS_DST:
+    def __init__(self, N=64, L=50.0, D=1.0, rho=1.0, K=100.0):
+        self.N = N
+        self.L = L
+        self.D = D
+        self.rho = rho
+        self.K = K
+        self.dx = L / (N + 1)
+        
+        # 建立網格
+        x = np.linspace(self.dx, L - self.dx, N)
+        y = np.linspace(self.dx, L - self.dx, N)
+        self.X, self.Y = np.meshgrid(x, y)
+        
+
+        self.scale = 1e-4 
+
+        # --- 預計算特徵值 ---
+        k = np.arange(1, N + 1)
+        kx, ky = np.meshgrid(k, k)
+        
+        # 1. Spectral Eigenvalues
+        self.lambda_spec = -((kx * np.pi / L)**2 + (ky * np.pi / L)**2)
+        
+        # 2. FDM Eigenvalues (via DST)
+        lx_fdm = (2 / self.dx**2) * (np.cos(kx * np.pi / (N + 1)) - 1)
+        ly_fdm = (2 / self.dx**2) * (np.cos(ky * np.pi / (N + 1)) - 1)
+        self.lambda_fdm = lx_fdm + ly_fdm
+
+        # 預計算空間基底 Phi 
+        # Phi = scale * x(L-x)y(L-y)
+        raw_Phi = self.X * (self.L - self.X) * self.Y * (self.L - self.Y)
+        self.Phi = self.scale * raw_Phi
+        raw_neg_lap = 2 * (self.Y * (self.L - self.Y) + self.X * (self.L - self.X))
+        self.neg_lap_Phi = self.scale * raw_neg_lap
+
+    def get_mms_data(self, t, case):
+        """
+        MMS Exact Solution and Source Term Generator
+        """
+        Phi = self.Phi
+        neg_lap_Phi = self.neg_lap_Phi
+        
+        if case == 1:
+            # Case 1: Static (v=1)
+            u_exact = Phi
+            reaction = self.rho * u_exact * (1 - u_exact / self.K)
+            f_source = self.D * neg_lap_Phi - reaction
+
+        elif case == 2:
+            # Case 2: Dynamic (v=sin(t))
+            v = np.sin(t)
+            dv_dt = np.cos(t)
+            u_exact = Phi * v
+            
+            term_dt = Phi * dv_dt
+            term_diff = self.D * v * neg_lap_Phi 
+            reaction = self.rho * u_exact * (1 - u_exact / self.K)
+            
+            f_source = term_dt + term_diff - reaction
+
+        elif case == 3:
+            # Case 3: Traveling Wave
+            k_wave = 4 * np.pi / self.L
+            omega = 3.0
+            theta = k_wave * self.X - omega * t
+            
+            v = 2 + np.sin(theta)
+            u_exact = Phi * v
+            
+            du_dt = -omega * Phi * np.cos(theta)
+            
+            term_A = v * (-neg_lap_Phi)
+            
+            dPhi_dx = self.scale * (self.L - 2 * self.X) * self.Y * (self.L - self.Y)
+            dv_dx = k_wave * np.cos(theta)
+            term_B = 2 * dPhi_dx * dv_dx
+            
+            lap_v = -(k_wave**2) * np.sin(theta)
+            term_C = Phi * lap_v
+            
+            lap_u = term_A + term_B + term_C
+            term_diff = -self.D * lap_u
+            
+            reaction = self.rho * u_exact * (1 - u_exact / self.K)
+            
+            f_source = du_dt + term_diff - reaction
+            
+        return u_exact, f_source
+
+    def reaction_exact(self, u, dt):
+        u = np.maximum(u, 0)
+        exp_rho = np.exp(self.rho * dt)
+        numerator = self.K * u * exp_rho
+        denominator = self.K + u * (exp_rho - 1)
+        return numerator / denominator
+
+    def solve(self, u0, T, dt, case, method='spectral'):
+        u = u0.copy()
+        steps = int(T / dt)
+        t = 0.0
+        
+        if method == 'spectral':
+            lambdas = self.lambda_spec
+        elif method == 'fdm':
+            lambdas = self.lambda_fdm
+        else:
+            raise ValueError("Method must be 'spectral' or 'fdm'")
+            
+        decay = np.exp(self.D * lambdas * dt)
+        
+        for _ in range(steps):
+            # 1. Reaction (dt/2)
+            u = self.reaction_exact(u, dt/2)
+            
+            # 2. Diffusion + Source (dt)
+            _, f_source = self.get_mms_data(t, case) # Source at t
+            
+            # DST Transform
+            u_hat = dst(dst(u, type=1, axis=0, norm='ortho'), type=1, axis=1, norm='ortho')
+            f_hat = dst(dst(f_source, type=1, axis=0, norm='ortho'), type=1, axis=1, norm='ortho')
+            
+            # Exact Integration
+            with np.errstate(divide='ignore', invalid='ignore'):
+                factor = (decay - 1) / (self.D * lambdas)
+                factor = np.where(np.abs(lambdas) < 1e-12, dt, factor)
+                
+            u_hat_new = u_hat * decay + f_hat * factor
+            
+            # IDST
+            u = idst(idst(u_hat_new, type=1, axis=0, norm='ortho'), type=1, axis=1, norm='ortho')
+            
+            t += dt
+            
+            # 3. Reaction (dt/2)
+            u = self.reaction_exact(u, dt/2)
+            
+        return u
+
+def run_simulation():
+    # Setup
+    N = 64
+    L = 50.0
+    T = 1.0  
+    dt = 1e-5
+    
+    solver = FisherKPPMMS_DST(N=N, L=L)
+    
+    cases = [
+        (1, "Case 1: Static (v=1)"),
+        (2, "Case 2: Dynamic (v=sin(t))"),
+        (3, "Case 3: Traveling Wave")
+    ]
+    
+    fig, axes = plt.subplots(3, 3, figsize=(18, 14))
+    
+    for row, (case_id, title) in enumerate(cases):
+        print(f"Simulating {title}...")
+        
+        u0, _ = solver.get_mms_data(0, case_id)
+        u_exact, _ = solver.get_mms_data(T, case_id)
+        
+        # Solving
+        u_fdm = solver.solve(u0, T, dt, case_id, method='fdm')
+        u_spec = solver.solve(u0, T, dt, case_id, method='spectral')
+        
+        # Errors (Absolute Difference)
+        err_fdm = np.abs(u_exact - u_fdm)
+        err_spec = np.abs(u_exact - u_spec)
+        
+        # 1. Exact Solution
+        # 使用 scale 後數值變小，colorbar 會自動調整
+        im0 = axes[row, 0].imshow(u_exact, origin='lower', extent=[0,L,0,L], cmap='inferno')
+        axes[row, 0].set_title(f"{title}\nExact Solution (t={T})")
+        plt.colorbar(im0, ax=axes[row, 0])
+        
+        # 2. FDM Error
+        im1 = axes[row, 1].imshow(err_fdm, origin='lower', extent=[0,L,0,L], cmap='jet')
+        axes[row, 1].set_title(f"FDM Error (via DST)\nMax: {np.max(err_fdm):.2e}")
+        plt.colorbar(im1, ax=axes[row, 1])
+        
+        # 3. Spectral Error
+        im2 = axes[row, 2].imshow(err_spec, origin='lower', extent=[0,L,0,L], cmap='jet')
+        axes[row, 2].set_title(f"Spectral Error\nMax: {np.max(err_spec):.2e}")
+        plt.colorbar(im2, ax=axes[row, 2])
+        
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    run_simulation()
+```
+![figure](2.jpg)
+
+![figure](3.jpg)
+
+![figure](4.jpg)
