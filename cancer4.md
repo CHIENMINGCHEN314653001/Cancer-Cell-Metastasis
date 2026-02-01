@@ -430,3 +430,6 @@ $$
 結論:
 
 由於 $$\nabla^2 u$$ 在邊界不為零，違反了 DST 的邊界隱式假設，導致頻譜收斂速度退化為 $$O(k^{-1})$$ 並產生 Gibbs Phenomenon 。因此，Spectral Method 在此案例中會出現顯著的邊界誤差，精度遠低於精確的 FDM。
+
+
+**Link:https://colab.research.google.com/drive/1mM0ajakgr8sy7D9dzZlf07uXV2fkASfx?usp=sharing**
