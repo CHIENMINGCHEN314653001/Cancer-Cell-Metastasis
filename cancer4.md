@@ -446,14 +446,11 @@ def verify_spectral_coefficients():
     
     k = np.arange(1, N + 1)
     
-    # ==========================================
+
     # 1. 計算 Numerical u_hat (透過 Scipy DST)
-    # ==========================================
     u_hat_num = dst(u, type=1) / (N + 1)
     
-    # ==========================================
-    # 2. 計算 Exact u_hat (透過你推導的數學公式)
-    # ==========================================
+    # 2. 計算 Exact u_hat 
     # 公式: 8L^2 / (k*pi)^3 (當 k 為奇數時)，偶數為 0
     u_hat_exact = np.zeros(N)
     odd_mask = (k % 2 != 0)
@@ -464,9 +461,6 @@ def verify_spectral_coefficients():
 
     spectral_error = np.abs(u_hat_num - u_hat_exact)
     
-    # ==========================================
-    # 繪圖展示 (只畫奇數項，因為偶數項皆為0)
-    # ==========================================
     k_odd = k[odd_mask]
     num_odd = np.abs(u_hat_num[odd_mask])
     exact_odd = np.abs(u_hat_exact[odd_mask])
