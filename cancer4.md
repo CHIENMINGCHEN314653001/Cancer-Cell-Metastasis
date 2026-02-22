@@ -430,6 +430,74 @@ $$
 結論:
 
 由於 $$\nabla^2 u$$ 在邊界不為零，違反了 DST 的邊界隱式假設，導致頻譜收斂速度退化為 $$O(k^{-1})$$ 並產生 Gibbs Phenomenon 。因此，Spectral Method 在此案例中會出現顯著的邊界誤差，精度遠低於精確的 FDM。
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import dst
 
+def verify_spectral_coefficients():
+    N = 64
+    L = 50.0
+    dx = L / (N + 1)
+    
+    # 建立 1D 網格與函數 u(x) = x(L-x)
+    x = np.linspace(dx, L - dx, N)
+    u = x * (L - x)
+    
+    k = np.arange(1, N + 1)
+    
+    # ==========================================
+    # 1. 計算 Numerical u_hat (透過 Scipy DST)
+    # ==========================================
+    u_hat_num = dst(u, type=1) / (N + 1)
+    
+    # ==========================================
+    # 2. 計算 Exact u_hat (透過你推導的數學公式)
+    # ==========================================
+    # 公式: 8L^2 / (k*pi)^3 (當 k 為奇數時)，偶數為 0
+    u_hat_exact = np.zeros(N)
+    odd_mask = (k % 2 != 0)
+    u_hat_exact[odd_mask] = (8 * L**2) / (k[odd_mask] * np.pi)**3
+    
+
+    # 3. 計算 Spectral Error
+
+    spectral_error = np.abs(u_hat_num - u_hat_exact)
+    
+    # ==========================================
+    # 繪圖展示 (只畫奇數項，因為偶數項皆為0)
+    # ==========================================
+    k_odd = k[odd_mask]
+    num_odd = np.abs(u_hat_num[odd_mask])
+    exact_odd = np.abs(u_hat_exact[odd_mask])
+    err_odd = spectral_error[odd_mask]
+
+    plt.figure(figsize=(14, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(k_odd, exact_odd, 'k-', linewidth=2, label=r'Exact $\hat{u}_k$ (Formula)')
+    plt.plot(k_odd, num_odd, 'ro', markersize=5, label=r'Numerical $\hat{u}_k$ (DST)')
+    plt.yscale('log')
+    plt.xlabel('Wavenumber (k)')
+    plt.ylabel('Coefficient Magnitude')
+    plt.title('Comparison of Spectral Coefficients')
+    plt.grid(True, which="both", ls="--", alpha=0.5)
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.plot(k_odd, err_odd, 'bX-', label=r'Error: $| \hat{u}_{num} - \hat{u}_{exact} |$')
+    plt.yscale('log')
+    plt.xlabel('Wavenumber (k)')
+    plt.ylabel('Absolute Error')
+    plt.title('Spectral Representation Error')
+    plt.grid(True, which="both", ls="--", alpha=0.5)
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    verify_spectral_coefficients()
+```
+![figure](12.jpg)
 
 **Link:https://colab.research.google.com/drive/1mM0ajakgr8sy7D9dzZlf07uXV2fkASfx?usp=sharing**
+**Link:https://colab.research.google.com/drive/1tmIAWL0UYstoDg5DNtVla6Hru_yRYww3?usp=sharing**
