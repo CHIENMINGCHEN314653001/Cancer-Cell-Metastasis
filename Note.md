@@ -10,7 +10,7 @@ Method of Manufactured Solutions,人造解方法(先射箭，再畫靶（逆向�
 
    共同問題:時間步長 ($$dt$$) 的天花板：Operator Splitting（算子分裂法）有時間截斷誤差，這使得你的總誤差卡在 $$10^{-7}$$ ，逼得你必須用極小的 $$dt=10^{-5}$$ 來跑，這非常耗時。
 
-Target:改善傳統的FDM，用CNN訓練!!
+Target:改善傳統的FDM，用CNN訓練!!  AI預測 (Forward Pass)--->預測 (Forward Pass)--->修正調整 (Backpropagation & Gradient Descent)
 
 *步驟:
   * 生成資料
