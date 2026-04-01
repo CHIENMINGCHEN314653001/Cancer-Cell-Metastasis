@@ -119,3 +119,59 @@ $$\text{Error}_{FDM} = \frac{\Delta x^2}{12} \left| \frac{\partial^4 u}{\partial
 For the 2D Laplacian $\nabla^2 u = \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}$, the leading order error term is:
 
 $$\text{Error}_{spatial} = \mathcal{O}\left( \Delta x^2 \cdot \frac{\partial^4 u}{\partial x^4} + \Delta y^2 \cdot \frac{\partial^4 u}{\partial y^4} \right)$$
+
+<br></br>
+<br></br>
+
+
+#### Derivation of the Poisson Solver using Spectral Method (DST)
+
+The Fisher-KPP equation is a reaction-diffusion equation:
+
+$$\frac{\partial u}{\partial t} = D \nabla^2 u + \rho u \left(1 - \frac{u}{K}\right)$$
+
+When we isolate the spatial operator and consider the steady-state or the pure diffusion limit without reaction and time dependence, we arrive at the Poisson Equation:
+
+$$\nabla^2 u(x, y) = f(x, y)$$
+
+where $\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}$ is the Laplacian operator. In the context of your research, solving this equation allows for the isolation of spatial discretization errors from temporal errors.
+
+
+Given Dirichlet boundary conditions $u=0$ on the boundaries of a square domain $[0, L] \times [0, L]$, we expand $u(x, y)$ and $f(x, y)$ using the orthonormal basis functions $\phi_{m,n}(x, y) = \sin\left(\frac{m\pi x}{L}\right)\sin\left(\frac{n\pi y}{L}\right)$:
+
+$$u(x, y) = \sum_{m=1}^{N} \sum_{n=1}^{N} \hat{u}_{m,n} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right)$$
+
+$$f(x, y) = \sum_{m=1}^{N} \sum_{n=1}^{N} \hat{f}_{m,n} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right)$$
+
+where $\hat{f}_{m,n}$ are the coefficients obtained via the Discrete Sine Transform (DST):
+
+$$\hat{f}_{m,n} = \mathcal{DST}\{f(x, y)\}$$
+
+
+Applying $\nabla^2$ to the expansion of $u(x, y)$:
+
+$$\nabla^2 u = \sum_{m,n} \hat{u}_{m,n} \left[ \frac{\partial^2}{\partial x^2} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right) + \frac{\partial^2}{\partial y^2} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right) \right]$$
+
+Using the property $\frac{d^2}{dx^2} \sin(kx) = -k^2 \sin(kx)$:
+
+$$\nabla^2 u = \sum_{m,n} \hat{u}_{m,n} \left[ -\left(\frac{m\pi}{L}\right)^2 - \left(\frac{n\pi}{L}\right)^2 \right] \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right)$$
+
+Substituting the expansions back into $\nabla^2 u = f$:
+
+$$\sum_{m,n} \lambda_{m,n} \hat{u}_{m,n} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right) = \sum_{m,n} \hat{f}_{m,n} \sin\left(\frac{m\pi x}{L}\right) \sin\left(\frac{n\pi y}{L}\right)$$
+
+where the spectral eigenvalues $\lambda_{m,n}$ are:
+
+$$\lambda_{m,n} = -\left[ \left(\frac{m\pi}{L}\right)^2 + \left(\frac{n\pi}{L}\right)^2 \right]$$
+
+Due to the orthogonality of the sine basis, the coefficients must satisfy the algebraic relation:
+
+$$\lambda_{m,n} \hat{u}_{m,n} = \hat{f}_{m,n}$$
+
+Solving for the unknown coefficients $\hat{u}_{m,n}$:
+
+$$\hat{u}_{m,n} = \frac{\hat{f}_{m,n}}{\lambda_{m,n}}$$
+
+The final numerical solution $u(x, y)$ is obtained by the Inverse Discrete Sine Transform (IDST):
+
+$$u(x, y) = \mathcal{IDST} \left\\{ \frac{\hat{f}_{m,n}}{\lambda_{m,n}} \right\\}$$
