@@ -293,9 +293,9 @@ $$\frac{u_{fdm}(t)}{u_{spec}(t)} = \exp\left(D \frac{\Delta x^2}{12} k_x^4 t\rig
 
    $$u_0 = \sin\left(\frac{\pi x}{L}\right)\sin\left(\frac{\pi y}{L}\right)\left[2 + \sin\left(\frac{4\pi x}{L}\right)\right]$$
 
-   透過積化和差公式，此初始條件可分解為多個獨立頻率的線性組合，其中包含高頻項 $$k_x = \frac{3\pi}{L}$ 與 $\frac{5\pi}{L}$$ 。根據 3.3 節的證明，這些高頻模態在 FDM 演化中會產生極其顯著的「衰減遲滯」，導致波形結構的嚴重畸變。此測試為 AI 提供了修復「動態高頻噪聲」的標準標籤。
+   透過積化和差公式，此初始條件可分解為多個獨立頻率的線性組合，其中包含高頻項 $$k_x = \frac{3\pi}{L}$$ 與 $$\frac{5\pi}{L}$$ 。根據 3.3 節的證明，這些高頻模態在 FDM 演化中會產生極其顯著的「衰減遲滯」，導致波形結構的嚴重畸變。此測試為 AI 提供了修復「動態高頻噪聲」的標準標籤。
 
-3. 邊界極限測試 (Case 2: Polynomial $x(L-x)y(L-y)$)：
+3. 邊界極限測試 (Case 2: Polynomial $$x(L-x)y(L-y)$$ )：
    若計算一維多項式 $$x(L-x)$$ 的傅立葉正弦轉換係數：
 
    $$\hat{u}_m(0) = \frac{2}{L}\int_0^L x(L-x)\sin\left(\frac{m\pi x}{L}\right)dx = \frac{4L^2}{m^3 \pi^3} \quad (\text{for odd } m)$$
@@ -317,8 +317,11 @@ link:https://colab.research.google.com/drive/15TOTS_xZIY6lpomE8A8ijzpu-E3o-zYn?u
 ##### $$\color{red}{數學定義與算子競爭 (Operator Competition)}$$
 
 給定 Fisher-KPP 偏微分方程：
+
 $$\frac{\partial u}{\partial t} = \underbrace{D \nabla^2 u}_{\text{算子 } \mathcal{A} \text{ (擴散)}} + \underbrace{\rho u \left(1 - \frac{u}{K}\right)}_{\text{算子 } \mathcal{B} \text{ (反應)}}$$
+
 為簡化後續的數學表示，我們將環境承載力 (Carrying Capacity) $K$ 正規化為 $1$。系統的總體演化可抽象表示為：
+
 $$\frac{\partial u}{\partial t} = (\mathcal{A} + \mathcal{B})u$$
 
 ##### $$\color{red}{反應算子的精確解析解 (Exact Logistic Evolution)}$$
@@ -352,9 +355,10 @@ $$u(t+\Delta t) = \Phi_{\mathcal{B}}^{\Delta t}[u(t)] = \frac{u(t) e^{\rho \Delt
 
 這意味著，若僅存在反應項，我們能達成「零時間截斷誤差」的完美演化。
 
-##### $$\color{red}{算子分裂法與 BCH 公式之泰勒展開證明 (Splitting & BCH Formula)}$$
 
-既然擴散 $$\mathcal{A}$$（經由 DST 頻域解析）和反應 $$\mathcal{B}$$（經由 Logistic 公式）皆具備精確演化路徑，真實系統的演化為 $$u(t+\Delta t) = e^{(\mathcal{A}+\mathcal{B})\Delta t} u(t)$$ 。
+##### $$\color{red}{算子分裂法與 BCH 公式之泰勒展開證明 (Splitting\quad and \quad BCH \quad Formula)}$$
+
+既然擴散 $$\mathcal{A}$$（經由 DST 頻域解析）和反應 $$\mathcal{B}$$ （經由 Logistic 公式）皆具備精確演化路徑，真實系統的演化為 $$u(t+\Delta t) = e^{(\mathcal{A}+\mathcal{B})\Delta t} u(t)$$ 。
 若我們強行將兩者拆分依序計算（即 Lie-Trotter Splitting $$e^{\mathcal{A}\Delta t} e^{\mathcal{B}\Delta t}$$ ），其誤差來源可透過泰勒級數嚴格展開：
 
 真實演化的泰勒展開：
@@ -382,9 +386,9 @@ $$\text{LTE} = \frac{1}{2} (\mathcal{B}\mathcal{A} - \mathcal{A}\mathcal{B}) \De
 
 $$[\mathcal{A},\mathcal{B}]u = \mathcal{A}(\mathcal{B}(u)) - \mathcal{B}'(u)\mathcal{A}(u)$$
 
-令擴散算子 $$\mathcal{A}(u) = D\nabla^2 u$，非線性反應算子 $\mathcal{B}(u) = f(u) = \rho u(1-u)$$ 。
+令擴散算子 $$\mathcal{A}(u) = D\nabla^2 u$$ ，非線性反應算子 $$\mathcal{B}(u) = f(u) = \rho u(1-u)$$ 。
 
-* 推導步驟 1：計算反應算子的弗雷歇導數 $\mathcal{B}'(u)$
+* 推導步驟 1：計算反應算子的弗雷歇導數 $$\mathcal{B}'(u)$$
 對任意擾動 $$v$$ ，導數定義為：
 
 $$\mathcal{B}'(u)v = \lim_{\epsilon \to 0} \frac{f(u+\epsilon v) - f(u)}{\epsilon} = \frac{d}{du}[\rho u(1-u)] \cdot v = \rho(1-2u)v$$
@@ -393,8 +397,8 @@ $$\mathcal{B}'(u)v = \lim_{\epsilon \to 0} \frac{f(u+\epsilon v) - f(u)}{\epsilo
 
 $$\mathcal{B}'(u)\mathcal{A}(u) = \rho(1-2u) [D\nabla^2 u] = \rho D(1-2u)\nabla^2 u$$
 
-* 推導步驟 2：計算先反應後擴散 $\mathcal{A}(\mathcal{B}(u))$
-將 $$\nabla^2 = \nabla \cdot \nabla$ 作用於 $f(u) = \rho u(1-u)$$ 。根據向量微積分的連鎖律 $$\nabla f(u) = f'(u)\nabla u$$ ，以及散度法則 $$\nabla \cdot (\phi \mathbf{V}) = \nabla \phi \cdot \mathbf{V} + \phi \nabla \cdot \mathbf{V}$$ ：
+* 推導步驟 2：計算先反應後擴散 $$\mathcal{A}(\mathcal{B}(u))$$
+將 $$\nabla^2 = \nabla \cdot \nabla$$ 作用於 $$f(u) = \rho u(1-u)$$ 。根據向量微積分的連鎖律 $$\nabla f(u) = f'(u)\nabla u$$ ，以及散度法則 $$\nabla \cdot (\phi \mathbf{V}) = \nabla \phi \cdot \mathbf{V} + \phi \nabla \cdot \mathbf{V}$$ ：
 
 $$\mathcal{A}(\mathcal{B}(u)) = D \nabla \cdot (\nabla (\rho u - \rho u^2))$$
 
@@ -437,9 +441,9 @@ $$u(t+\Delta t) \approx S_{\Delta t} [u(t)] = \Phi_{\mathcal{B}}^{\Delta t/2} \c
 
 link:https://colab.research.google.com/drive/15TOTS_xZIY6lpomE8A8ijzpu-E3o-zYn?usp=sharing
 
+
 ---
 
-這正是本研究「去耦戰略 (Decoupling Strategy)」的核心數學基石：
 * Step 2 (Poisson)：利用代數逆矩陣剔除時間變數，強迫 AI 專注建立修復 $$\frac{\partial^4 u}{\partial x^4}$$ 空間扭曲的感知野 (Receptive Field)。
 * Step 3 (Heat)：利用 $$[\mathcal{A},\mathcal{A}]=0$$ 的純線性系統，教 AI 理解空間誤差在動態擴散中的衰減遲滯現象。
 * Step 4 (Fisher-KPP)：當 AI 帶著純粹的「空間修正權重」來到這一步時，它只需精準地拔除 FDM 網格的幾何離散誤差，而將殘留的純時間對易子誤差留給二階 Strang Splitting 去物理壓制，完美實現了傳統數值算法與現代深度學習的最佳分工協作。
