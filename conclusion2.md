@@ -53,6 +53,13 @@ FDM 的空間誤差精度為 $$\mathcal{O}(\Delta x^2)$$，且該誤差量值直
 
 $$u(x) = \sum_{m=1}^{\infty} \hat{u}_m \sin(k_m x), \quad k_m = \frac{m\pi}{L}$$
 
+where $$\hat{u}_m:$$ (Fourier Sine Coefficient) 
+是透過將原函數 $$u(x)$$ 投影 (Projection) 到正交基底 $$\sin(k_m x)$$ 上所計算出來的。
+
+利用三角函數的正交性（Orthogonality），等式兩邊同乘 $$\sin(k_p x)$$ 並在空間 $$[0, L]$$ 上積分，藉此嚴格求出 $$\hat{u}_m$$ 的公式： 
+
+$$\hat{u}_m = \frac{2}{L} \int_{0}^{L} u(x) \sin(k_m x) dx$$
+
 在實際數值計算中，我們無法計算到無窮大，必須在特定的波數 $N$（對應網格解析度）進行截斷 (Truncation)，得到數值逼近解 $$u_N(x)$$ ：
 
 $$u_N(x) = \sum_{m=1}^{N} \hat{u}_m \sin(k_m x)$$
