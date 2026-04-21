@@ -77,11 +77,132 @@ $$E_N(x) = u(x) - u_N(x) = \sum_{m=N+1}^{\infty} \hat{u}_m \sin(k_m x)$$
 根據傅立葉分析的達布定理 (Darboux's Principle)，頻譜係數 $$\hat{u}_m$$ 的衰減速度，完全取決於真實函數 $$u(x)$$ 的平滑程度（可微性）：
 1. 若函數只有 $p$ 階連續可微 ( $$u \in C^p$$ )，則係數以代數速率衰減： $$|\hat{u}_m| \sim \mathcal{O}(m^{-(p+1)})$$ 。
 2. 頻譜收斂 (Spectral Convergence)：若函數為無限階可微的平滑函數 ( $$u \in C^\infty$$ ，例如高斯波或三角函數)，其頻譜係數將以超越任何多項式的速度下降，呈現指數級衰減：
-   $$|\hat{u}_m| \sim \mathcal{O}(e^{-cm}), \quad c > 0$$
+   $$|\hat{u}_m| \sim \mathcal{O}(e^{-cm}), \quad c > 0$$   ( $$c$$ 是函數在複數平面上的「解析帶寬 (Width of Analytic Strip)」，也就是從實數軸出發，抵達最近一個奇異點的最短距離。)
+
+
+>達布定理最初是針對泰勒級數 (Taylor Series) 或冪級數提出的，後來被廣泛推廣到傅立葉級數與切比雪夫級數。它的核心數學表述如下：
+>Darboux's Theorem :
+>
+>假設一個複變函數 $f(z)$ 在原點的某個鄰域內是解析的 (Analytic)，並具有冪級數展開： $$f(z) = \sum_{n=0}^{\infty} a_n z^n$$ 若  $$f(z)$$ 的收斂半徑為 $R$，且在收斂圓 $$|z| = R$$ 上存在有限個奇異點 (Singularities) $$\zeta_k$$ 。那麼，當 $$n \to \infty$$ 時，級數係數 $$a_n$$ 的漸近行為 
+>(Asymptotic behavior)，完全由函數 $$f(z)$$ 在這些邊界奇異點 $$\zeta_k$$ 附近的局部行為所決定。
 
 將此性質代回誤差方程式，我們可得出頻譜法的全域空間誤差上界：
 
 $$\|E_N\| \leq C e^{-cN}$$
+
+>它是複變分析 (Complex Analysis) 結合傅立葉分析 (Fourier Analysis)所推導出來的嚴格數學結果。
+>
+>##### 第一步：定義空間截斷誤差 (Truncation Error)
+>
+>假設我們有一個在區間 $[-\pi, \pi]$ 上的週期函數 $u(x)$，它的完整傅立葉級數展開為：
+>$$u(x) = \sum_{m=-\infty}^{\infty} \hat{u}_m e^{imx}$$
+>
+>在數值計算中，只能保留前 $N$ 個波數（頻率）時，我們的數值近似解為：
+>$$u_N(x) = \sum_{m=-N}^{N} \hat{u}_m e^{imx}$$
+>
+>那麼，空間截斷誤差 $E_N(x)$ 就是那些被我們捨棄的「高頻尾巴 (High-frequency tail)」：
+>$$E_N(x) = u(x) - u_N(x) = \sum_{|m| > N} \hat{u}_m e^{imx}$$
+>
+>我們想要知道這個誤差的最大值（即無窮範數 $\|E_N\|_\infty$），利用三角不等式可以得到誤差的上界：
+>
+>$$\|E_N\| \leq \sum_{|m| > N} |\hat{u}_m|$$
+>
+>>
+>>$$E_N(x) = \sum_{|m| > N} \hat{u}_m e^{imx}$$
+>>
+>>公式左邊的 $$\|E_N\|$$ 加上了雙直線，在數學上稱為 (Norm)。在這裡，它通常代表的是最大絕對值範數 (Infinity Norm, $$\| \cdot \|_\infty$$ )。
+>>
+>>$$|a + b| \leq |a| + |b|$$
+>>
+>>把這個概念推廣到無窮多項的連加（Sigma $\sum$），就是廣義的三角不等式:
+>>
+>>$$\left| \sum a_k \right| \leq \sum |a_k|$$
+>>
+>>現在，我們對誤差函數 $E_N(x)$ 的兩邊同時取絕對值，並套用廣義三角不等式：
+>>
+>>$$|E_N(x)| = \left| \sum_{|m| > N} \hat{u}_m e^{imx} \right| \leq \sum_{|m| > N} \left| \hat{u}_m e^{imx} \right|$$
+>>
+>>
+>>接下來是這個推導中最關鍵的一步：處理括號裡面的 $\left| \hat{u}_m e^{imx} \right|$。
+>>
+>>根據絕對值的乘法性質 $|A \cdot B| = |A| \cdot |B|$，我們可以把它拆開：
+>>
+>>$$\left| \hat{u}_m e^{imx} \right| = |\hat{u}_m| \cdot |e^{imx}|$$
+>>
+>>根據複變函數中的尤拉公式 (Euler's Formula)：
+>>
+>>$$e^{imx} = \cos(mx) + i \sin(mx)$$
+>>
+>>它的絕對值（長度）為實部平方加虛部平方再開根號：
+>>
+>>$$|e^{imx}| = \sqrt{\cos^2(mx) + \sin^2(mx)} = \sqrt{1} = 1$$
+>>
+>>這代表在複數平面上， $$e^{imx}$$ 永遠是在半徑為 $$1$$ 的單位圓上旋轉，它只會改變相位（角度），完全不會改變長度（振幅）。
+>>
+>>因此，把 $|e^{imx}| = 1$ 代回去：
+>>
+>>$$|E_N(x)| \leq \sum_{|m| > N} |\hat{u}_m| \cdot 1$$
+>>
+>>$$|E_N(x)| \leq \sum_{|m| > N} |\hat{u}_m|$$
+>>
+>
+>
+>##### 第二步：利用柯西積分定理求 $|\hat{u}_m|$ 的衰減率 (The Contour Shift)
+>
+>傅立葉係數的原始定義為實數軸上的積分：
+>
+>$$\hat{u}_m = \frac{1}{2\pi} \int_{-\pi}^{\pi} u(x) e^{-imx} dx$$
+>
+>現在，把實數變數 $x$ 擴展為複數變數 $$z = x + iy$$ 。
+>假設 $u(z)$ 在以實數軸為中心、寬度為 $c$ 的水平帶狀區域內（$-c < \text{Im}(z) < c$）是*解析的 (Analytic)，這代表在這個帶狀區域內沒有任何奇異點，且函數值是有界的，我們設其最大值為 $M$（即 $|u(z)| \leq M$）。
+>
+>根據複變函數中的柯西積分定理 (Cauchy's Integral Theorem)，如果在一個解析區域內平移積分路徑，積分的結果不會改變。
+>
+>* 當 $m > 0$ 時，我們將積分路徑從實數軸向下平移到 $z = x - ic$：
+>
+>  $$\hat{u}_m = \frac{1}{2\pi} \int_{-\pi}^{\pi} u(x - ic) e^{-im(x - ic)} dx$$
+>
+>把指數項拆開 $e^{-im(x - ic)} = e^{-imx} e^{-m c}$：
+>
+>$$\hat{u}_m = \frac{e^{-mc}}{2\pi} \int_{-\pi}^{\pi} u(x - ic) e^{-imx} dx$$
+>
+>
+>現在，對等式兩邊取絕對值來尋找上界：
+>
+>$$|\hat{u}_m| \leq \frac{e^{-mc}}{2\pi} \int_{-\pi}^{\pi} |u(x - ic)| \cdot |e^{-imx}| dx$$
+>
+>因為 $|e^{-imx}| = 1$，且我們假設在該路徑上 $|u(z)| \leq M$：
+>
+>$$|\hat{u}_m| \leq \frac{e^{-mc}}{2\pi} \int_{-\pi}^{\pi} M dx = \frac{e^{-mc}}{2\pi} (2\pi M) = M e^{-mc}$$
+>
+>同理，當 $m < 0$ 時，我們將積分路徑向上平移到 $z = x + ic$，可以得到完全對稱的結果 $|\hat{u}_m| \leq M e^{-|m|c}$。
+>
+>結論： 透過複數平面的路徑平移，我們嚴格證明了單一頻譜係數的衰減率為：
+>
+>$$|\hat{u}_m| \leq M e^{-|m|c}$$
+>
+>##### 第三步：對高頻尾巴進行等比級數求和 (Summing the Geometric Series)
+>
+>現在，把第二步求出的係數衰減率代回第一步的誤差公式中。
+>
+>空間截斷誤差的總和為：
+>
+>$$\|E_N\| \leq \sum_{|m| > N} |\hat{u}_m| = 2 \sum_{m = N+1}^{\infty} |\hat{u}_m|$$
+>
+>將 $|\hat{u}_m| \leq M e^{-mc}$ 代入：
+>
+>$$\|E_N\| \leq 2 \sum_{m = N+1}^{\infty} M e^{-mc} = 2M \sum_{m = N+1}^{\infty} (e^{-c})^m$$
+>
+>你會發現，這是一個公比為 $r = e^{-c}$ 的無窮等比級數 (Geometric Series)。因為 $$c > 0$$ ，所以 $$e^{-c} < 1$$ ，這個級數必然收斂。
+>利用無窮等比級數求和公式 $$\sum_{k=K}^\infty r^k = \frac{r^K}{1-r}$$ ：
+>
+>$$\|E_N\| \leq 2M \frac{e^{-c(N+1)}}{1 - e^{-c}}$$
+>
+>$$\|E_N\| \leq \left( \frac{2M e^{-c}}{1 - e^{-c}} \right) \cdot e^{-cN}$$
+>
+>令常數 $$C = \frac{2M e^{-c}}{1 - e^{-c}}$$ ，就完美得到了最終的誤差上界定理：
+>
+>$$\|E_N\| \leq C e^{-cN}$$
 
 結論：
 頻譜法的空間誤差精度為 指數級收斂 $$\mathcal{O}(e^{-cN})$$ 。這意味著，只要物理場足夠平滑，當我們稍微增加網格點 $N$ 時，誤差就會像雪崩一樣迅速掉到機器的浮點數極限（ $$\approx 10^{-16}$$ ）。這在數學上完美解釋了為何在 Step 1 的後續推導中，Spectral Method 的特徵值 $$\lambda^{spec}$$ 可以被視為「絕對精確的 Ground Truth」，而 FDM 卻只能在 $$\mathcal{O}(\Delta x^2)$$ 的泥沼中掙扎。
