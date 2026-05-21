@@ -617,8 +617,5 @@ $$u(t+\Delta t) \approx S_{\Delta t} [u(t)] = \Phi_{\mathcal{B}}^{\Delta t/2} \c
 link:https://colab.research.google.com/drive/15TOTS_xZIY6lpomE8A8ijzpu-E3o-zYn?usp=sharing
 
 
----
 
-* Step 2 (Poisson)：利用代數逆矩陣剔除時間變數，強迫 AI 專注建立修復 $$\frac{\partial^4 u}{\partial x^4}$$ 空間扭曲的感知野 (Receptive Field)。
-* Step 3 (Heat)：利用 $$[\mathcal{A},\mathcal{A}]=0$$ 的純線性系統，教 AI 理解空間誤差在動態擴散中的衰減遲滯現象。
-* Step 4 (Fisher-KPP)：當 AI 帶著純粹的「空間修正權重」來到這一步時，它只需精準地拔除 FDM 網格的幾何離散誤差，而將殘留的純時間對易子誤差留給二階 Strang Splitting 去物理壓制，完美實現了傳統數值算法與現代深度學習的最佳分工協作。
+
